@@ -1,12 +1,20 @@
 const { Sequelize } = require("sequelize");
 
-// DB Connection Configuration
-const sequelize = new Sequelize("ecommerce", "postgres", process.env.DB_PASSWORD, {
-  host: "localhost",
-  dialect: "postgres",
-});
+const password = process.env.DB_PASSWORD.replace(/['"]+/g, ''); // Remove quotes
 
-// Test Connection Function
+// DB config
+const sequelize = new Sequelize(
+  "ecommerce", // database name
+  "postgres", // database username
+  password, // database password
+  {
+    host: "localhost", // database host
+    dialect: "postgres", // database dialect
+    port: 5432, // database port
+  }
+);
+
+// test the connection
 async function testConnection() {
   try {
     await sequelize.authenticate();
@@ -18,4 +26,7 @@ async function testConnection() {
   }
 }
 
-module.exports = { sequelize, testConnection };
+module.exports = {
+  testConnection,
+  sequelize,
+};
