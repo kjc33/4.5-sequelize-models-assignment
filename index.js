@@ -1,9 +1,9 @@
 require("dotenv").config();
 const express = require("express");
-const { sequelize, testConnection } = require("./models/conn");
+const { sequelize, testConnection, Sequelize } = require("./models/conn");
 // const Category = require('./models/categoryModel');
 // const Item = require('./models/itemModel');
-const { Item, Category } = require("./models/associations"); // Adjust the path as necessary
+const { Item, Category } = require("./models/associations");
 
 const PORT = 8080;
 
@@ -12,21 +12,22 @@ testConnection();
 const app = express();
 app.use(express.json());
 
-sequelize.sync()
- .then(() => {
+sequelize
+  .sync()
+  .then(() => {
     console.log("Database & tables created!");
- })
- .catch((error) => {
+  })
+  .catch((error) => {
     console.error("Error creating database & tables:", error);
- });
+  });
 
- Item.sync({ alter: true })
- .then(() => {
+Item.sync({ alter: true })
+  .then(() => {
     console.log("Table for Item model was updated successfully");
- })
- .catch((error) => {
+  })
+  .catch((error) => {
     console.error("Error updating table for Item model:", error);
- });
+  });
 
 // restrieve Category data
 const findCategories = async () => {
@@ -91,6 +92,46 @@ const findItems = async () => {
 };
 
 findItems();
+
+const createFruitsCategory = async () => {
+  try {
+    // Create the "fruits" category
+    const fruitsCategory = await Category.create({
+      name: "fruits",
+    });
+
+    // Log the newly created category
+    console.log("Fruits category created:", fruitsCategory.toJSON());
+
+    // Return the generated id
+    return fruitsCategory.id;
+  } catch (error) {
+    console.error("Error creating fruits category:", error);
+    throw error;
+  }
+};
+
+const createItemsForFruitsCategory = async () => {
+  try {
+    // Create the "fruits" category
+    const fruitsCategoryId = await createFruitsCategory();
+
+    // Create items for the "fruits" category
+    const items = await Item.bulkCreate([
+      { name: "apple", price: 1.99, description: "Juicy apple", categoryid: fruitsCategoryId },
+      { name: "banana", price: 0.99, description: "Yellow banana", categoryid: fruitsCategoryId },
+      // Add more items as needed
+    ]);
+
+    // Log the newly created items
+    console.log("Items created for fruits category:", items.map(item => item.toJSON()));
+  } catch (error) {
+    console.error("Error creating items for fruits category:", error);
+  }
+};
+
+// Call the function to create items for the "fruits" category
+// createItemsForFruitsCategory();
 
 // GET - /api/categories - get all categories using the findCategories function
 app.get("/api/categories", async (req, res, next) => {
@@ -214,24 +255,27 @@ const findAllFruits = async () => {
 // 4) Update all meat prices to 120.99
 
 const updateMeatPrices = async () => {
-    const meatsCategory = await Category.findOne({ where: { name: "meats" } });
-  
-    if (!meatsCategory) {
-      console.error("Meats category not found.");
-      return;
-    }
-  
-    await Item.update({ price: 120.99 }, {
+  const meatsCategory = await Category.findOne({ where: { name: "meats" } });
+
+  if (!meatsCategory) {
+    console.error("Meats category not found.");
+    return;
+  }
+
+  await Item.update(
+    { price: 120.99 },
+    {
       where: { categoryid: meatsCategory.id },
-    });
-    console.log("Meat prices updated successfully.");
+    }
+  );
+  console.log("Meat prices updated successfully.");
 };
 
 // 5) Select all items with prices greater than 20
 
 const findItemsWithPriceGreaterThan20 = async () => {
   const items = await Item.findAll({
-    where: { price: { [Sequelize.Op.gt]: 20 } },
+    where: { price: { $gt: 20 } },
   });
   console.log(
     "Items with price greater than 20:",
@@ -240,10 +284,10 @@ const findItemsWithPriceGreaterThan20 = async () => {
 };
 
 (async () => {
-    await createItems();
-    await findAllFruits();
-    await updateMeatPrices();
-    await findItemsWithPriceGreaterThan20();
+  // await createItems();
+  await findAllFruits();
+  // await updateMeatPrices();
+  await findItemsWithPriceGreaterThan20();
 })();
 
 app.listen(PORT, () => {
