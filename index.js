@@ -4,6 +4,7 @@ const { sequelize, testConnection, Sequelize } = require("./models/conn");
 // const Category = require('./models/categoryModel');
 // const Item = require('./models/itemModel');
 const { Item, Category } = require("./models/associations");
+const { Op } = require("sequelize");
 
 const PORT = 8080;
 
@@ -132,6 +133,20 @@ const createItemsForFruitsCategory = async () => {
 
 // Call the function to create items for the "fruits" category
 // createItemsForFruitsCategory();
+
+// GET - /api/items/fruit - get all fruit items
+app.get("/api/items/fruit", async (req, res, next) => {
+  try {
+    const fruits = await Item.findAll({
+      where: { categoryid: 3 }, // Assuming 3 is the category id for fruits
+    });
+    res.status(200).json(fruits);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+});
 
 // GET - /api/categories - get all categories using the findCategories function
 app.get("/api/categories", async (req, res, next) => {
@@ -275,7 +290,7 @@ const updateMeatPrices = async () => {
 
 const findItemsWithPriceGreaterThan20 = async () => {
   const items = await Item.findAll({
-    where: { price: { $gt: 20 } },
+    where: { price: { [Op.gt]: 20 } },
   });
   console.log(
     "Items with price greater than 20:",
@@ -283,9 +298,10 @@ const findItemsWithPriceGreaterThan20 = async () => {
   );
 };
 
+
 (async () => {
   // await createItems();
-  await findAllFruits();
+  // await findAllFruits();
   // await updateMeatPrices();
   await findItemsWithPriceGreaterThan20();
 })();
