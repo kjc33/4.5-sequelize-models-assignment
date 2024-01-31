@@ -20,6 +20,14 @@ sequelize.sync()
     console.error("Error creating database & tables:", error);
  });
 
+ Item.sync({ alter: true })
+ .then(() => {
+    console.log("Table for Item model was updated successfully");
+ })
+ .catch((error) => {
+    console.error("Error updating table for Item model:", error);
+ });
+
 // restrieve Category data
 const findCategories = async () => {
   const result = await Category.findAll();
